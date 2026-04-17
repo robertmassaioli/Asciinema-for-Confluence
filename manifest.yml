@@ -72,11 +72,55 @@ modules:
         function: resolver
       categories:
         - media
-      config:
-        resource: config-attachment
-        render: native
-        title: Recording Options
-        openOnInsert: true
+      parameters:
+        - identifier: filename
+          name:
+            value: Attachment Filename
+          type: string
+          required: true
+          description:
+            value: "The exact filename of the .cast attachment on this page, including the .cast extension (e.g. demo.cast)."
+        - identifier: autoplay
+          name:
+            value: Autoplay
+          type: boolean
+          defaultValue: "false"
+          description:
+            value: Start playing automatically when the page loads.
+        - identifier: loop
+          name:
+            value: Loop
+          type: boolean
+          defaultValue: "false"
+          description:
+            value: Loop the recording continuously.
+        - identifier: speed
+          name:
+            value: Speed
+          type: string
+          defaultValue: "1"
+          description:
+            value: "Playback speed multiplier. 1 = normal, 2 = double speed."
+        - identifier: theme
+          name:
+            value: Theme
+          type: enum
+          defaultValue: asciinema
+          description:
+            value: Colour theme for the terminal.
+          values:
+            - asciinema
+            - monokai
+            - solarized-dark
+            - solarized-light
+            - dracula
+        - identifier: poster
+          name:
+            value: Poster Frame
+          type: string
+          description:
+            value: "Time position (in seconds) to use as the preview image before playback starts."
+      config: true
 
   # Module 3: Smart Link — enrich asciinema.org URLs with a rich preview card
   graph:smartLink:
@@ -107,10 +151,6 @@ resources:
     path: static/app/build
     tunnel:
       port: 3000
-  # Attachment macro: UI Kit config panel (bundled by Forge directly from src)
-  - key: config-attachment
-    path: src/frontend/attachmentConfig.jsx
-
 app:
   runtime:
     name: nodejs24.x
