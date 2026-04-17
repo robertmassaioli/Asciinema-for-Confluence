@@ -43,10 +43,7 @@ Asciinema-for-Confluence/
 ├── package.json                  # Root — backend dependencies (@forge/api, @forge/resolver)
 ├── src/
 │   ├── index.js                  # Backend resolver (attachment URL lookup)
-│   ├── smartLink.js              # Smart Link resolver (asciinema.org metadata fetch)
-│   ├── InlineConfig.jsx          # UI Kit config panel for the Inline macro
-│   ├── AttachmentConfig.jsx      # UI Kit config panel for the Attachment macro
-│   └── CastScriptConfig.jsx      # UI Kit config panel for the CastScript macro
+│   └── smartLink.js              # Smart Link resolver (asciinema.org metadata fetch)
 └── static/
     └── app/                      # Single shared Custom UI React app (all three macros)
         ├── src/
@@ -54,9 +51,12 @@ Asciinema-for-Confluence/
         │   ├── ViewContext.js    # Forge context provider (from ep-tool pattern)
         │   ├── ContextRouter.js  # moduleKey-based route + ForgeReconciler.addConfig()
         │   ├── useEffectAsync.js # Async effect hook helper
-        │   ├── InlineApp.js      # Player — reads .cast from ADF code block in body
-        │   ├── AttachmentApp.js  # Player — fetches .cast from page attachment
-        │   └── CastScriptApp.js  # Player — compiles castscript from body, renders in-browser
+        │   ├── InlineApp.js      # Custom UI player — reads .cast from ADF code block in body
+        │   ├── InlineConfig.js   # UI Kit config panel for the Inline macro
+        │   ├── AttachmentApp.js  # Custom UI player — fetches .cast from page attachment
+        │   ├── AttachmentConfig.js # UI Kit config panel for the Attachment macro
+        │   ├── CastScriptApp.js  # Custom UI player — compiles castscript from body in-browser
+        │   └── CastScriptConfig.js # UI Kit config panel for the CastScript macro
         └── package.json          # npm start → PORT=3000
 ```
 
