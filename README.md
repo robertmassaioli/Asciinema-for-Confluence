@@ -44,10 +44,9 @@ Asciinema-for-Confluence/
 ├── src/
 │   ├── index.js                  # Backend resolver (attachment URL lookup)
 │   ├── smartLink.js              # Smart Link resolver (asciinema.org metadata fetch)
-│   └── frontend/
-│       ├── InlineConfig.jsx      # UI Kit config panel for the Inline macro
-│       ├── AttachmentConfig.jsx  # UI Kit config panel for the Attachment macro
-│       └── CastScriptConfig.jsx  # UI Kit config panel for the CastScript macro
+│   ├── InlineConfig.jsx          # UI Kit config panel for the Inline macro
+│   ├── AttachmentConfig.jsx      # UI Kit config panel for the Attachment macro
+│   └── CastScriptConfig.jsx      # UI Kit config panel for the CastScript macro
 └── static/
     └── app/                      # Single shared Custom UI React app (all three macros)
         ├── src/
