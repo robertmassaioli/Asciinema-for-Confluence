@@ -14,6 +14,21 @@ modules:
         - media
       config: true
 
+    # Module 3: Bodied macro — write a castscript in the body, compiled in-browser
+    - key: asciinema-castscript
+      title: Asciinema CastScript
+      description: >
+        Write a human-readable castscript in the macro body and watch it render as
+        an animated terminal recording. Edit the page to update the animation — no
+        tools, no file uploads, no raw JSON required.
+      resource: main
+      resolver:
+        function: resolver
+      layout: bodied
+      config: true
+      categories:
+        - media
+
     # Module 2: Standard macro — point at a .cast file attached to the page
     - key: asciinema-attachment
       title: Asciinema Recording

@@ -5,8 +5,10 @@ import { ViewContext } from './ViewContext';
 import { ContextRoute } from './ContextRouter';
 import InlineApp from './InlineApp';
 import AttachmentApp from './AttachmentApp';
+import CastScriptApp from './CastScriptApp';
 import InlineConfig from './InlineConfig';
 import AttachmentConfig from './AttachmentConfig';
+import CastScriptConfig from './CastScriptConfig';
 import '@atlaskit/css-reset';
 
 // Custom UI render — both macros share this single React app.
@@ -21,6 +23,9 @@ ReactDOM.render(
       </ContextRoute>
       <ContextRoute moduleKey='asciinema-attachment' config={<AttachmentConfig />}>
         <AttachmentApp />
+      </ContextRoute>
+      <ContextRoute moduleKey='asciinema-castscript' config={<CastScriptConfig />}>
+        <CastScriptApp />
       </ContextRoute>
     </ViewContext>
   </React.StrictMode>,
