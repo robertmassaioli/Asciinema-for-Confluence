@@ -77,4 +77,5 @@ const Config = () => {
   );
 };
 
+ForgeReconciler.render(<React.StrictMode><></></React.StrictMode>);
 ForgeReconciler.addConfig(<Config />);
