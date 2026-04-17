@@ -10,6 +10,49 @@ import { view } from '@forge/bridge';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
+/**
+ * Extracts plain text from the first code block found in an ADF document.
+ *
+ * ADF structure for a code block:
+ * {
+ *   "type": "doc",
+ *   "content": [
+ *     {
+ *       "type": "codeBlock",
+ *       "content": [{ "type": "text", "text": "<cast content>" }]
+ *     }
+ *   ]
+ * }
+ *
+ * If no code block is found, falls back to concatenating all text nodes
+ * in the document so plain-text paste also works as a fallback.
+ */
+function extractCodeBlockText(adf) {
+  if (!adf) return '';
+
+  // If it's already a plain string (shouldn't happen with layout: bodied, but just in case)
+  if (typeof adf === 'string') return adf;
+
+  const nodes = adf?.content ?? [];
+
+  // First pass: look for a codeBlock node
+  for (const node of nodes) {
+    if (node.type === 'codeBlock') {
+      return (node.content ?? [])
+        .filter((n) => n.type === 'text')
+        .map((n) => n.text)
+        .join('');
+    }
+  }
+
+  // Fallback: concatenate all top-level text nodes
+  return nodes
+    .flatMap((n) => n.content ?? [])
+    .filter((n) => n.type === 'text')
+    .map((n) => n.text)
+    .join('');
+}
+
 export default function InlineApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
@@ -20,11 +63,19 @@ export default function InlineApp() {
     async function initPlayer() {
       try {
         const ctx = await view.getContext();
-        const castText = ctx.extension?.macro?.body ?? '';
         const config = ctx.extension?.config ?? {};
 
-        if (!castText.trim()) {
-          setError('No .cast content found. Edit the macro and paste your .cast file content into the body.');
+        // The macro body is ADF (Atlassian Document Format) — a JSON object.
+        // We extract the raw text from the first code block in the body,
+        // which is where the user should paste their .cast file content.
+        const body = ctx.extension?.macro?.body;
+        const castText = extractCodeBlockText(body);
+
+        if (!castText || !castText.trim()) {
+          setError(
+            'No .cast content found. Edit the macro, insert a Code Block, ' +
+            'and paste your .cast file content inside it.'
+          );
           return;
         }
 
