@@ -11,7 +11,10 @@ import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
 /**
- * Extracts plain text from the first code block found in an ADF document.
+ * Extracts plain text from a code block in an ADF document.
+ *
+ * Expects exactly ONE codeBlock node at the top level of the document.
+ * Returns { text, error } — if error is set, text will be null.
  *
  * ADF structure for a code block:
  * {
@@ -23,34 +26,44 @@ import 'asciinema-player/dist/bundle/asciinema-player.css';
  *     }
  *   ]
  * }
- *
- * If no code block is found, falls back to concatenating all text nodes
- * in the document so plain-text paste also works as a fallback.
  */
 function extractCodeBlockText(adf) {
-  if (!adf) return '';
-
-  // If it's already a plain string (shouldn't happen with layout: bodied, but just in case)
-  if (typeof adf === 'string') return adf;
-
-  const nodes = adf?.content ?? [];
-
-  // First pass: look for a codeBlock node
-  for (const node of nodes) {
-    if (node.type === 'codeBlock') {
-      return (node.content ?? [])
-        .filter((n) => n.type === 'text')
-        .map((n) => n.text)
-        .join('');
-    }
+  if (!adf) {
+    return { text: null, error: 'The macro body is empty. Add a Code Block containing your .cast file content.' };
   }
 
-  // Fallback: concatenate all top-level text nodes
-  return nodes
-    .flatMap((n) => n.content ?? [])
+  if (typeof adf === 'string') {
+    // Shouldn't happen with layout: bodied but handle gracefully
+    return { text: adf, error: null };
+  }
+
+  const nodes = adf?.content ?? [];
+  const codeBlocks = nodes.filter((n) => n.type === 'codeBlock');
+
+  if (codeBlocks.length === 0) {
+    return {
+      text: null,
+      error: 'No Code Block found in the macro body. This macro expects exactly one Code Block containing the raw .cast file content. Use the / menu to insert a Code Block, then paste your .cast content inside it.',
+    };
+  }
+
+  if (codeBlocks.length > 1) {
+    return {
+      text: null,
+      error: `Found ${codeBlocks.length} Code Blocks in the macro body. This macro expects exactly one Code Block containing the .cast file content. Please remove the extra Code Blocks.`,
+    };
+  }
+
+  const text = (codeBlocks[0].content ?? [])
     .filter((n) => n.type === 'text')
     .map((n) => n.text)
     .join('');
+
+  if (!text.trim()) {
+    return { text: null, error: 'The Code Block in the macro body is empty. Paste your .cast file content inside it.' };
+  }
+
+  return { text, error: null };
 }
 
 export default function InlineApp() {
@@ -74,14 +87,12 @@ export default function InlineApp() {
         const body = ctx.extension?.macro?.body;
         console.log('[asciinema-inline] raw body:', JSON.stringify(body, null, 2));
 
-        const castText = extractCodeBlockText(body);
+        const { text: castText, error: bodyError } = extractCodeBlockText(body);
         console.log('[asciinema-inline] extracted castText (first 200 chars):', castText?.slice(0, 200));
 
-        if (!castText || !castText.trim()) {
-          setError(
-            'No .cast content found. Edit the macro, insert a Code Block, ' +
-            'and paste your .cast file content inside it.'
-          );
+        if (bodyError) {
+          console.warn('[asciinema-inline] body error:', bodyError);
+          setError(bodyError);
           return;
         }
 
