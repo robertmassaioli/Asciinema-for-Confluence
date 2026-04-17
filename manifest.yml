@@ -83,6 +83,9 @@ permissions:
     scripts:
       # asciinema-player uses WebAssembly which requires unsafe-eval to instantiate
       - unsafe-eval
+    styles:
+      # asciinema-player injects inline styles for the terminal UI
+      - unsafe-inline
   scopes:
     - read:confluence-content.all
   external:
