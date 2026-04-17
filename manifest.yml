@@ -73,6 +73,7 @@ permissions:
       - unsafe-inline
   scopes:
     - read:confluence-content.all
+    - readonly:content.attachment:confluence
   external:
     fetch:
       backend:
