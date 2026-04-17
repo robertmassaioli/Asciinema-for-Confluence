@@ -4,15 +4,17 @@
  * Registered via ForgeReconciler.addConfig(). Forge bundles this file
  * directly — no separate package.json or build step required.
  *
- * Only config-approved components are used:
- * CheckboxGroup, Label, Select, Textfield
+ * Only config-approved components and props are used:
+ *   - Label (children only — no labelFor/id in macro config context)
+ *   - CheckboxGroup (options array, defaultValue, name)
+ *   - Select (options array, defaultValue, name)
+ *   - Textfield (defaultValue, name, placeholder)
  */
 
 import ForgeReconciler, {
   CheckboxGroup,
   Label,
   Select,
-  Option,
   Textfield,
   useConfig,
 } from '@forge/react';
@@ -31,7 +33,7 @@ const Config = () => {
 
   return (
     <>
-      <Label labelFor="playback">Playback</Label>
+      <Label>Playback</Label>
       <CheckboxGroup
         name="playback"
         options={[
@@ -44,42 +46,32 @@ const Config = () => {
         ]}
       />
 
-      <Label labelFor="speed">Speed</Label>
+      <Label>Speed</Label>
       <Textfield
-        id="speed"
         name="speed"
         placeholder="1"
         defaultValue={String(config.speed ?? '1')}
-        description="Playback speed multiplier. 1 = normal, 2 = double speed."
       />
 
-      <Label labelFor="theme">Theme</Label>
+      <Label>Theme</Label>
       <Select
-        id="theme"
         name="theme"
+        options={THEME_OPTIONS}
         defaultValue={config.theme ?? 'asciinema'}
-      >
-        {THEME_OPTIONS.map((t) => (
-          <Option key={t.value} label={t.label} value={t.value} />
-        ))}
-      </Select>
+      />
 
-      <Label labelFor="cols">Terminal Width (columns)</Label>
+      <Label>Terminal Width (columns)</Label>
       <Textfield
-        id="cols"
         name="cols"
         placeholder="Auto (from cast header)"
         defaultValue={String(config.cols ?? '')}
-        description="Leave blank to use the width declared in the .cast file."
       />
 
-      <Label labelFor="rows">Terminal Height (rows)</Label>
+      <Label>Terminal Height (rows)</Label>
       <Textfield
-        id="rows"
         name="rows"
         placeholder="Auto (from cast header)"
         defaultValue={String(config.rows ?? '')}
-        description="Leave blank to use the height declared in the .cast file."
       />
     </>
   );
