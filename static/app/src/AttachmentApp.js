@@ -1,13 +1,19 @@
 /**
  * Attachment Macro — Player Component
  *
- * Reads the attachment filename and page ID from the Forge context, calls the
- * backend resolver to get a download URL for the .cast file, then initialises
- * the asciinema-player pointing at that URL.
+ * Uses requestConfluence from @forge/bridge to fetch the .cast file content
+ * directly from the frontend — no backend resolver needed.
+ *
+ * Flow:
+ *   1. GET /wiki/api/v2/pages/{pageId}/attachments?filename={filename}
+ *      → find the attachment ID
+ *   2. GET /wiki/rest/api/content/{attachmentId}/download
+ *      → fetch raw .cast text content
+ *   3. Pass the text to AsciinemaPlayer.create() via a data URL
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { view, invoke } from '@forge/bridge';
+import { view, requestConfluence } from '@forge/bridge';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
@@ -49,9 +55,46 @@ export default function AttachmentApp() {
           return;
         }
 
-        console.log('[asciinema-attachment] invoking resolveAttachmentUrl...');
-        const { downloadUrl } = await invoke('resolveAttachmentUrl', { pageId, filename });
-        console.log('[asciinema-attachment] resolved downloadUrl:', downloadUrl);
+        // Step 1: Find the attachment ID by filename using Confluence v2 API
+        console.log('[asciinema-attachment] looking up attachment by filename...');
+        const listResp = await requestConfluence(
+          `/wiki/api/v2/pages/${pageId}/attachments?filename=${encodeURIComponent(filename)}&limit=1`
+        );
+        if (!listResp.ok) {
+          throw new Error(`Failed to list attachments: ${listResp.status} ${listResp.statusText}`);
+        }
+        const listData = await listResp.json();
+        console.log('[asciinema-attachment] attachment list response:', JSON.stringify(listData, null, 2));
+
+        const attachment = listData.results?.[0];
+        if (!attachment) {
+          setError(
+            `No attachment named "${filename}" found on this page. ` +
+            'Make sure you have attached the .cast file and the filename matches exactly.'
+          );
+          setLoading(false);
+          return;
+        }
+
+        const attachmentId = attachment.id;
+        console.log('[asciinema-attachment] found attachment id:', attachmentId);
+
+        // Step 2: Download the raw .cast file content
+        console.log('[asciinema-attachment] downloading attachment content...');
+        const downloadResp = await requestConfluence(
+          `/wiki/rest/api/content/${attachmentId}/download`
+        );
+        if (!downloadResp.ok) {
+          throw new Error(`Failed to download attachment: ${downloadResp.status} ${downloadResp.statusText}`);
+        }
+        const castText = await downloadResp.text();
+        console.log('[asciinema-attachment] downloaded castText (first 200 chars):', castText.slice(0, 200));
+
+        if (!castText.trim()) {
+          setError(`The attachment "${filename}" appears to be empty.`);
+          setLoading(false);
+          return;
+        }
 
         if (!containerRef.current) return;
 
@@ -71,7 +114,9 @@ export default function AttachmentApp() {
         };
         console.log('[asciinema-attachment] creating player with opts:', playerOpts);
 
-        player = AsciinemaPlayer.create(downloadUrl, containerRef.current, playerOpts);
+        // Pass cast content as a data URL so the player can parse it directly
+        const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castText)}`;
+        player = AsciinemaPlayer.create(dataUrl, containerRef.current, playerOpts);
         console.log('[asciinema-attachment] player created successfully');
       } catch (err) {
         console.error('[asciinema-attachment] error:', err);
