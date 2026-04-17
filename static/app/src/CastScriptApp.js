@@ -61,24 +61,21 @@ export default function CastScriptApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'compiling' | 'ready'
+  const [castData, setCastData] = useState(null); // { castText, playerOpts }
 
+  // Phase 1: fetch context, parse, compile — runs once on mount
   useEffect(() => {
-    let player = null;
-
-    async function initPlayer() {
+    async function compile_() {
       try {
         const ctx = await view.getContext();
         console.log('[asciinema-castscript] full context:', JSON.stringify(ctx, null, 2));
 
-        // Config is read from context — cannot use useConfig() here as it belongs
-        // to @forge/react's React instance, not our ReactDOM instance.
         const config = ctx.extension?.config ?? {};
         console.log('[asciinema-castscript] config:', config);
 
         const body = ctx.extension?.macro?.body;
         console.log('[asciinema-castscript] raw body:', JSON.stringify(body, null, 2));
 
-        // Extract castscript source from the code block
         const { text: castscriptSource, error: extractError } = extractCodeBlockText(body);
         if (extractError) {
           setError(extractError);
@@ -89,18 +86,14 @@ export default function CastScriptApp() {
 
         setStatus('compiling');
 
-        // Parse the castscript source
         const { config: scriptConfig, nodes } = parse(castscriptSource);
 
-        // Apply optional seed for deterministic timing
         const seed = config.seed ? parseInt(config.seed, 10) : undefined;
         if (seed !== undefined && !isNaN(seed)) {
           scriptConfig.typingSeed = seed;
           console.log('[asciinema-castscript] using typing seed:', seed);
         }
 
-        // Compile to cast event stream (fully in-browser, no file I/O needed)
-        // NULL_RESOLVER means >> and include: directives will throw CompileError
         const compiled = await compile(scriptConfig, nodes, {
           resolver: NULL_RESOLVER,
           onResolveError: 'error',
@@ -108,15 +101,9 @@ export default function CastScriptApp() {
         });
         console.log('[asciinema-castscript] compiled successfully');
 
-        // Encode as asciicast v3 NDJSON
         const castText = encodeV3(compiled);
         console.log('[asciinema-castscript] encoded cast (first 200 chars):', castText.slice(0, 200));
 
-        if (!containerRef.current) return;
-
-        setStatus('ready');
-
-        // Player options from macro config (overrides scriptConfig theme)
         const playback = Array.isArray(config.playback) ? config.playback : [];
         const playerOpts = {
           autoPlay: playback.includes('autoplay'),
@@ -125,28 +112,36 @@ export default function CastScriptApp() {
           theme: config.theme || scriptConfig.theme || 'asciinema',
           fit: 'width',
         };
-        console.log('[asciinema-castscript] creating player with opts:', playerOpts);
 
-        // Pass cast content as a data URL so the player can parse it directly
-        const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castText)}`;
-        player = AsciinemaPlayer.create(dataUrl, containerRef.current, playerOpts);
-        console.log('[asciinema-castscript] player created successfully');
+        // Store cast data in state — this triggers a re-render which mounts
+        // the container div, then Phase 2 creates the player.
+        setCastData({ castText, playerOpts });
+        setStatus('ready');
       } catch (err) {
         console.error('[asciinema-castscript] error:', err);
-        // CompileError from @cast-builder/core has a descriptive .message
         setError(`Failed to compile castscript: ${err.message}`);
         setStatus('ready');
       }
     }
 
-    initPlayer();
+    compile_();
+  }, []);
+
+  // Phase 2: create player once castData is set AND container div is in the DOM
+  useEffect(() => {
+    if (!castData || !containerRef.current) return;
+
+    console.log('[asciinema-castscript] creating player with opts:', castData.playerOpts);
+    const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castData.castText)}`;
+    const player = AsciinemaPlayer.create(dataUrl, containerRef.current, castData.playerOpts);
+    console.log('[asciinema-castscript] player created successfully');
 
     return () => {
       if (player && typeof player.dispose === 'function') {
         player.dispose();
       }
     };
-  }, []);
+  }, [castData]);
 
   if (error) {
     return (
