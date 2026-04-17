@@ -59,11 +59,17 @@ modules:
 
 resources:
   # Inline macro: Custom UI React app (serves both main view and config panel)
+  # Run: cd static/inline-macro && npm start   (serves on port 3000)
   - key: main-inline
     path: static/inline-macro/build
+    tunnel:
+      port: 3000
   # Attachment macro: Custom UI React app (serves both main view and config panel)
+  # Run: cd static/attachment-macro && PORT=3001 npm start   (serves on port 3001)
   - key: main-attachment
     path: static/attachment-macro/build
+    tunnel:
+      port: 3001
 
 app:
   runtime:
