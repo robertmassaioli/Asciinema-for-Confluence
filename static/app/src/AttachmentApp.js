@@ -57,9 +57,13 @@ export default function AttachmentApp() {
 
         setLoading(false);
 
+        // CheckboxGroup stores selected values in config.playback as an array
+        // e.g. ['autoplay', 'loop'] — not as separate boolean keys
+        const playback = Array.isArray(config.playback) ? config.playback : [];
+
         const playerOpts = {
-          autoPlay: config.autoplay === true || config.autoplay === 'true',
-          loop: config.loop === true || config.loop === 'true',
+          autoPlay: playback.includes('autoplay'),
+          loop: playback.includes('loop'),
           speed: config.speed ? parseFloat(config.speed) : 1,
           theme: config.theme || 'asciinema',
           poster: config.poster ? `npt:${config.poster}` : undefined,
