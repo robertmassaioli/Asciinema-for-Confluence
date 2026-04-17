@@ -22,9 +22,15 @@ export default function AttachmentApp() {
     async function initPlayer() {
       try {
         const ctx = await view.getContext();
+        console.log('[asciinema-attachment] full context:', JSON.stringify(ctx, null, 2));
+
         const pageId = ctx.contentId;
         const config = ctx.extension?.config ?? {};
+        console.log('[asciinema-attachment] pageId:', pageId);
+        console.log('[asciinema-attachment] config:', config);
+
         const filename = config.filename?.trim();
+        console.log('[asciinema-attachment] filename:', filename);
 
         if (!filename) {
           setError(
@@ -41,26 +47,28 @@ export default function AttachmentApp() {
           return;
         }
 
+        console.log('[asciinema-attachment] invoking resolveAttachmentUrl...');
         const { downloadUrl } = await invoke('resolveAttachmentUrl', { pageId, filename });
+        console.log('[asciinema-attachment] resolved downloadUrl:', downloadUrl);
 
         if (!containerRef.current) return;
 
         setLoading(false);
 
-        player = AsciinemaPlayer.create(
-          downloadUrl,
-          containerRef.current,
-          {
-            autoPlay: config.autoplay === true || config.autoplay === 'true',
-            loop: config.loop === true || config.loop === 'true',
-            speed: config.speed ? parseFloat(config.speed) : 1,
-            theme: config.theme || 'asciinema',
-            poster: config.poster ? `npt:${config.poster}` : undefined,
-            fit: 'width',
-          }
-        );
+        const playerOpts = {
+          autoPlay: config.autoplay === true || config.autoplay === 'true',
+          loop: config.loop === true || config.loop === 'true',
+          speed: config.speed ? parseFloat(config.speed) : 1,
+          theme: config.theme || 'asciinema',
+          poster: config.poster ? `npt:${config.poster}` : undefined,
+          fit: 'width',
+        };
+        console.log('[asciinema-attachment] creating player with opts:', playerOpts);
+
+        player = AsciinemaPlayer.create(downloadUrl, containerRef.current, playerOpts);
+        console.log('[asciinema-attachment] player created successfully');
       } catch (err) {
-        console.error('Asciinema attachment player error:', err);
+        console.error('[asciinema-attachment] error:', err);
         setError(`Failed to load recording: ${err.message}`);
         setLoading(false);
       }

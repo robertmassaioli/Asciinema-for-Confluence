@@ -63,13 +63,19 @@ export default function InlineApp() {
     async function initPlayer() {
       try {
         const ctx = await view.getContext();
+        console.log('[asciinema-inline] full context:', JSON.stringify(ctx, null, 2));
+
         const config = ctx.extension?.config ?? {};
+        console.log('[asciinema-inline] config:', config);
 
         // The macro body is ADF (Atlassian Document Format) — a JSON object.
         // We extract the raw text from the first code block in the body,
         // which is where the user should paste their .cast file content.
         const body = ctx.extension?.macro?.body;
+        console.log('[asciinema-inline] raw body:', JSON.stringify(body, null, 2));
+
         const castText = extractCodeBlockText(body);
+        console.log('[asciinema-inline] extracted castText (first 200 chars):', castText?.slice(0, 200));
 
         if (!castText || !castText.trim()) {
           setError(
@@ -81,21 +87,25 @@ export default function InlineApp() {
 
         if (!containerRef.current) return;
 
+        const playerOpts = {
+          cols: config.cols ? parseInt(config.cols, 10) : undefined,
+          rows: config.rows ? parseInt(config.rows, 10) : undefined,
+          autoPlay: config.autoplay === true || config.autoplay === 'true',
+          loop: config.loop === true || config.loop === 'true',
+          speed: config.speed ? parseFloat(config.speed) : 1,
+          theme: config.theme || 'asciinema',
+          fit: 'width',
+        };
+        console.log('[asciinema-inline] creating player with opts:', playerOpts);
+
         player = AsciinemaPlayer.create(
           { data: castText },
           containerRef.current,
-          {
-            cols: config.cols ? parseInt(config.cols, 10) : undefined,
-            rows: config.rows ? parseInt(config.rows, 10) : undefined,
-            autoPlay: config.autoplay === true || config.autoplay === 'true',
-            loop: config.loop === true || config.loop === 'true',
-            speed: config.speed ? parseFloat(config.speed) : 1,
-            theme: config.theme || 'asciinema',
-            fit: 'width',
-          }
+          playerOpts
         );
+        console.log('[asciinema-inline] player created successfully');
       } catch (err) {
-        console.error('Asciinema inline player error:', err);
+        console.error('[asciinema-inline] error:', err);
         setError(`Failed to initialise player: ${err.message}`);
       }
     }
