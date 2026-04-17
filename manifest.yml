@@ -13,7 +13,7 @@ modules:
       categories:
         - media
       config:
-        resource: config-inline
+        resource: main-inline
         render: native
         title: Playback Options
         openOnInsert: true
@@ -22,15 +22,15 @@ modules:
     - key: asciinema-attachment
       title: Asciinema Recording
       description: >
-        Render an asciinema terminal recording from a .cast file attached
-        to this Confluence page.
+        Render an asciinema terminal recording from a .cast file attached to
+        this Confluence page.
       resource: main-attachment
       resolver:
         function: resolver
       categories:
         - media
       config:
-        resource: config-attachment
+        resource: main-attachment
         render: native
         title: Recording Options
         openOnInsert: true
@@ -52,23 +52,17 @@ modules:
   function:
     # Single resolver handles both macro modules (attachment URL lookup)
     - key: resolver
-      handler: src/index.handler
+      handler: index.handler
     # Dedicated function for Smart Link resolution
     - key: smart-link-resolver
-      handler: src/smartLink.handler
+      handler: smartLink.handler
 
 resources:
-  # Inline macro: main player view (Custom UI — React app)
+  # Inline macro: Custom UI React app (serves both main view and config panel)
   - key: main-inline
     path: static/inline-macro/build
-  # Inline macro: playback options config panel (UI Kit)
-  - key: config-inline
-    path: static/inline-macro/build
-  # Attachment macro: main player view (Custom UI — React app)
+  # Attachment macro: Custom UI React app (serves both main view and config panel)
   - key: main-attachment
-    path: static/attachment-macro/build
-  # Attachment macro: recording options config panel (UI Kit)
-  - key: config-attachment
     path: static/attachment-macro/build
   # Shared asciinema-player JS/CSS assets (referenced by both frontends)
   - key: player-assets
@@ -83,14 +77,10 @@ app:
 
 permissions:
   scopes:
-    # Needed to look up attachment download URLs via the Confluence REST API
     - read:confluence-content.all
   external:
     fetch:
       backend:
-        # Smart Link resolver fetches metadata from asciinema.org
-        - 'https://asciinema.org'
+        - address: https://asciinema.org
       client:
-        # Frontend iframes load the .cast file directly from the Confluence
-        # attachment download URL (same origin, but listed for CSP clarity)
-        - 'https://asciinema.org'
+        - address: https://asciinema.org
