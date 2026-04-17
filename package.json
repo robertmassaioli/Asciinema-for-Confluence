@@ -1,14 +1,12 @@
 {
   "name": "asciinema-for-confluence",
   "version": "1.0.0",
-  "description": "Forge app that embeds asciinema terminal recordings in Confluence via two macros and a Smart Link resolver.",
+  "description": "Forge app that embeds asciinema terminal recordings in Confluence via three macros and a Smart Link resolver.",
   "main": "src/index.js",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "npm run build:inline && npm run build:attachment",
-    "build:inline": "cd static/inline-macro && npm install && npm run build",
-    "build:attachment": "cd static/attachment-macro && npm install && npm run build"
+    "build": "cd static/app && npm install && npm run build"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
