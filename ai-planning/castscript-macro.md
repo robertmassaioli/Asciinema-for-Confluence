@@ -76,53 +76,24 @@ Key directives:
 
 ```yaml
 modules:
-  confluence:macro:
+  macro:
     - key: asciinema-castscript
       title: Asciinema CastScript
       description: >
         Write a castscript in the macro body and watch it render as an animated
         terminal recording. Edit the page to update the animation — no tools needed.
-      icon: assets/icon.png
       resource: main
+      resolver:
+        function: resolver
       layout: bodied
       config: true
       categories:
         - media
-      parameters:
-        - identifier: theme
-          name: Player Theme
-          description: Visual theme for the asciinema player
-          type: enum
-          values:
-            - asciinema
-            - monokai
-            - solarized-dark
-            - solarized-light
-            - dracula
-          defaultValue: asciinema
-        - identifier: playback
-          name: Autoplay
-          description: Start playing automatically when the page loads
-          type: boolean
-          defaultValue: false
-        - identifier: loop
-          name: Loop
-          description: Loop the recording
-          type: boolean
-          defaultValue: false
-        - identifier: speed
-          name: Speed
-          description: Playback speed multiplier (e.g. 1, 1.5, 2)
-          type: string
-          defaultValue: "1"
-        - identifier: seed
-          name: Typing seed
-          description: >
-            Integer seed for deterministic typing timing. Leave blank for
-            random timing on each compile. Set to any number for reproducible output.
-          type: string
-          defaultValue: ""
 ```
+
+No `parameters:` block — config is handled by a UI Kit component (see below),
+not classic macro parameters. `config: true` tells Confluence to show a config
+panel; the panel's fields are defined entirely in `CastScriptConfig.js`.
 
 ### Frontend: `static/app/src/CastScriptApp.js`
 
@@ -197,13 +168,21 @@ configuration changes.
 4. Save the page — the player renders immediately, no upload required
 5. To update the animation: edit the page, change the script, save
 
-### Config panel (classic macro parameters)
+### Config panel (`CastScriptConfig.js` — UI Kit component)
 
-- **Player Theme** — dropdown: asciinema / monokai / solarized-dark / solarized-light / dracula
-- **Autoplay** — checkbox
-- **Loop** — checkbox
-- **Speed** — text field (numeric multiplier)
-- **Typing seed** — text field (optional integer for deterministic timing)
+The config panel is a UI Kit component registered via the `ContextRoute config` prop
+(same pattern as `InlineConfig.js` and `AttachmentConfig.js`). It uses
+`ForgeReconciler.addConfig()` under the hood and `useConfig()` to read back saved values.
+
+Fields:
+- **Playback** — `CheckboxGroup` with options `autoplay` and `loop` (stored as
+  `config.playback: string[]`, e.g. `['autoplay', 'loop']`)
+- **Speed** — `Textfield` (name: `speed`, default `"1"`)
+- **Theme** — `Select` with options: asciinema / monokai / solarized-dark / solarized-light / dracula
+- **Typing seed** — `Textfield` (name: `seed`, placeholder `"Leave blank for random"`)
+
+Config values are read in `CastScriptApp.js` via `ctx.extension.config` (not `useConfig()`,
+since the app component is rendered by `ReactDOM`, not `ForgeReconciler`).
 
 ---
 
@@ -221,10 +200,11 @@ configuration changes.
 
 | File | Change |
 |---|---|
-| `static/app/src/CastScriptApp.js` | **Create** — new macro renderer |
-| `static/app/src/index.js` | **Modify** — add `<ContextRoute moduleKey='asciinema-castscript'>` |
+| `static/app/src/CastScriptApp.js` | **Create** — new macro renderer (Custom UI, ReactDOM) |
+| `static/app/src/CastScriptConfig.js` | **Create** — UI Kit config panel (ForgeReconciler) |
+| `static/app/src/index.js` | **Modify** — add `<ContextRoute moduleKey='asciinema-castscript' config={<CastScriptConfig />}>` |
 | `static/app/package.json` | **Modify** — add `@cast-builder/core` dependency |
-| `manifest.yml` | **Modify** — add `asciinema-castscript` macro module |
+| `manifest.yml` | **Modify** — add `asciinema-castscript` macro module (no `parameters:` block) |
 
 ---
 
