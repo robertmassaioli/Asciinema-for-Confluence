@@ -8,6 +8,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { view, invoke } from '@forge/bridge';
+import { useConfig } from '@forge/react';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
@@ -15,6 +16,8 @@ export default function AttachmentApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  // useConfig() from @forge/react reads config saved by the UI Kit config panel
+  const config = useConfig() ?? {};
 
   useEffect(() => {
     let player = null;
@@ -25,9 +28,8 @@ export default function AttachmentApp() {
         console.log('[asciinema-attachment] full context:', JSON.stringify(ctx, null, 2));
 
         const pageId = ctx.contentId;
-        const config = ctx.extension?.config ?? {};
         console.log('[asciinema-attachment] pageId:', pageId);
-        console.log('[asciinema-attachment] config:', config);
+        console.log('[asciinema-attachment] config (from useConfig):', config);
 
         const filename = config.filename?.trim();
         console.log('[asciinema-attachment] filename:', filename);

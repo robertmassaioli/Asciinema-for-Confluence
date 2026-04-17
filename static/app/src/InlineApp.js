@@ -7,6 +7,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { view } from '@forge/bridge';
+import { useConfig } from '@forge/react';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
@@ -69,6 +70,8 @@ function extractCodeBlockText(adf) {
 export default function InlineApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
+  // useConfig() from @forge/react reads config saved by the UI Kit config panel
+  const config = useConfig() ?? {};
 
   useEffect(() => {
     let player = null;
@@ -77,9 +80,7 @@ export default function InlineApp() {
       try {
         const ctx = await view.getContext();
         console.log('[asciinema-inline] full context:', JSON.stringify(ctx, null, 2));
-
-        const config = ctx.extension?.config ?? {};
-        console.log('[asciinema-inline] config:', config);
+        console.log('[asciinema-inline] config (from useConfig):', config);
 
         // The macro body is ADF (Atlassian Document Format) — a JSON object.
         // We extract the raw text from the first code block in the body,

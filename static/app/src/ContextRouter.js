@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import ForgeReconciler from '@forge/react';
 import { isPresent } from 'ts-is-present';
 import { useViewContext } from './ViewContext';
 
@@ -19,9 +20,14 @@ interface Context {
   siteUrl: string;
   timezone: string;
 }
+
+If a config prop is provided and the moduleKey matches, ForgeReconciler.addConfig()
+is called once with that config element. This allows a single static package to
+register different config UIs for different macro module keys.
 */
 export function ContextRoute (props) {
   const context = useViewContext();
+  const configRegistered = useRef(false);
 
   console.log('context', context);
 
@@ -42,6 +48,13 @@ export function ContextRoute (props) {
 
   if (props.noModal && isPresent(context?.extension?.modal)) {
     return <></>;
+  }
+
+  // If a config element is provided and this route matches, register it once.
+  // useRef ensures addConfig is only called on the first render, not on re-renders.
+  if (isPresent(props.config) && !configRegistered.current) {
+    configRegistered.current = true;
+    ForgeReconciler.addConfig(props.config);
   }
 
   return props.children;

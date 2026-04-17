@@ -12,53 +12,6 @@ modules:
       layout: bodied
       categories:
         - media
-      parameters:
-        - identifier: autoplay
-          name:
-            value: Autoplay
-          type: boolean
-          defaultValue: "false"
-          description:
-            value: Start playing automatically when the page loads.
-        - identifier: loop
-          name:
-            value: Loop
-          type: boolean
-          defaultValue: "false"
-          description:
-            value: Loop the recording continuously.
-        - identifier: speed
-          name:
-            value: Speed
-          type: string
-          defaultValue: "1"
-          description:
-            value: "Playback speed multiplier. 1 = normal, 2 = double speed."
-        - identifier: theme
-          name:
-            value: Theme
-          type: enum
-          defaultValue: asciinema
-          description:
-            value: Colour theme for the terminal.
-          values:
-            - asciinema
-            - monokai
-            - solarized-dark
-            - solarized-light
-            - dracula
-        - identifier: cols
-          name:
-            value: Terminal Width
-          type: string
-          description:
-            value: Override terminal width (columns). Leave blank to use the value from the .cast file.
-        - identifier: rows
-          name:
-            value: Terminal Height
-          type: string
-          description:
-            value: Override terminal height (rows). Leave blank to use the value from the .cast file.
       config: true
 
     # Module 2: Standard macro — point at a .cast file attached to the page
@@ -72,54 +25,6 @@ modules:
         function: resolver
       categories:
         - media
-      parameters:
-        - identifier: filename
-          name:
-            value: Attachment Filename
-          type: string
-          required: true
-          description:
-            value: "The exact filename of the .cast attachment on this page, including the .cast extension (e.g. demo.cast)."
-        - identifier: autoplay
-          name:
-            value: Autoplay
-          type: boolean
-          defaultValue: "false"
-          description:
-            value: Start playing automatically when the page loads.
-        - identifier: loop
-          name:
-            value: Loop
-          type: boolean
-          defaultValue: "false"
-          description:
-            value: Loop the recording continuously.
-        - identifier: speed
-          name:
-            value: Speed
-          type: string
-          defaultValue: "1"
-          description:
-            value: "Playback speed multiplier. 1 = normal, 2 = double speed."
-        - identifier: theme
-          name:
-            value: Theme
-          type: enum
-          defaultValue: asciinema
-          description:
-            value: Colour theme for the terminal.
-          values:
-            - asciinema
-            - monokai
-            - solarized-dark
-            - solarized-light
-            - dracula
-        - identifier: poster
-          name:
-            value: Poster Frame
-          type: string
-          description:
-            value: "Time position (in seconds) to use as the preview image before playback starts."
       config: true
 
   # Module 3: Smart Link — enrich asciinema.org URLs with a rich preview card

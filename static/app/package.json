@@ -6,6 +6,7 @@
   "dependencies": {
     "@atlaskit/css-reset": "^6.6.2",
     "@forge/bridge": "5.15.1",
+    "@forge/react": "^11.14.1",
     "asciinema-player": "^3.9.0",
     "react": "^16",
     "react-dom": "^16",
