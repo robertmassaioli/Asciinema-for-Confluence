@@ -1,29 +1,18 @@
 /**
- * Entry point for the inline macro Custom UI.
+ * Entry point for the inline macro Custom UI (player view only).
  *
- * Renders either the player (App) or the config panel (Config) depending
- * on the Forge render context (__FORGE_RENDER_CONTEXT__):
- *   - "macro"        → App  (the asciinema player)
- *   - "macro-config" → Config (playback options form, uses view.submit())
- *
- * Both views use standard ReactDOM.render() — this is a Custom UI app.
- * Config uses view.submit() from @forge/bridge to save settings (NOT
- * ForgeReconciler.addConfig(), which is UI Kit only).
+ * The config panel is now a separate UI Kit app (static/inline-config/).
+ * This file only needs to render the player (App).
  */
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 import '@atlaskit/css-reset';
-
 import App from './App';
-import Config from './Config';
-
-const context = window.__FORGE_RENDER_CONTEXT__;
-const isConfig = context === 'macro-config';
 
 ReactDOM.render(
   <React.StrictMode>
-    {isConfig ? <Config /> : <App />}
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );

@@ -13,7 +13,8 @@ modules:
       categories:
         - media
       config:
-        resource: main-inline
+        resource: config-inline
+        render: native
         title: Playback Options
         openOnInsert: true
 
@@ -29,7 +30,8 @@ modules:
       categories:
         - media
       config:
-        resource: main-attachment
+        resource: config-attachment
+        render: native
         title: Recording Options
         openOnInsert: true
 
@@ -56,18 +58,24 @@ modules:
       handler: smartLink.handler
 
 resources:
-  # Inline macro: Custom UI React app (serves both main view and config panel)
+  # Inline macro: Custom UI React app (player view)
   # Run: cd static/inline-macro && npm start   (serves on port 3000)
   - key: main-inline
     path: static/inline-macro/build
     tunnel:
       port: 3000
-  # Attachment macro: Custom UI React app (serves both main view and config panel)
-  # Run: cd static/attachment-macro && PORT=3001 npm start   (serves on port 3001)
+  # Inline macro: UI Kit config panel (bundled by Forge directly from src)
+  - key: config-inline
+    path: src/frontend/inlineConfig.jsx
+  # Attachment macro: Custom UI React app (player view)
+  # Run: cd static/attachment-macro && npm start   (serves on port 3001)
   - key: main-attachment
     path: static/attachment-macro/build
     tunnel:
       port: 3001
+  # Attachment macro: UI Kit config panel (bundled by Forge directly from src)
+  - key: config-attachment
+    path: src/frontend/attachmentConfig.jsx
 
 app:
   runtime:
