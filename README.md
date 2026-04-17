@@ -35,23 +35,23 @@ nvm install
 ```
 Asciinema-for-Confluence/
 ├── manifest.yml                  # Forge app manifest
-├── package.json                  # Root — backend dependencies (@forge/api, @forge/resolver)
+├── package.json                  # Root — backend + UI Kit dependencies
 ├── src/
 │   ├── index.js                  # Backend resolver (resolveAttachmentUrl)
-│   └── smartLink.js              # Smart Link resolver (asciinema.org metadata fetch)
+│   ├── smartLink.js              # Smart Link resolver (asciinema.org metadata fetch)
+│   └── frontend/
+│       ├── inlineConfig.jsx      # UI Kit config panel for the inline macro
+│       └── attachmentConfig.jsx  # UI Kit config panel for the attachment macro
 └── static/
-    ├── inline-macro/             # Custom UI React app for the Asciinema Inline macro
-    │   ├── src/
-    │   │   ├── index.js          # Entry point — renders App or Config based on context
-    │   │   ├── App.js            # Player view — reads .cast from macro body
-    │   │   └── Config.js         # Config panel — playback options (autoplay, speed, theme…)
-    │   └── package.json          # npm start → PORT=3000
-    └── attachment-macro/         # Custom UI React app for the Asciinema Recording macro
+    └── app/                      # Single shared Custom UI React app (both macros)
         ├── src/
-        │   ├── index.js          # Entry point — renders App or Config based on context
-        │   ├── App.js            # Player view — fetches .cast from page attachment
-        │   └── Config.js         # Config panel — filename, playback options
-        └── package.json          # npm start → PORT=3001
+        │   ├── index.js          # Entry point — ViewContext + ContextRoute routing
+        │   ├── ViewContext.js    # Forge context provider (from ep-tool)
+        │   ├── ContextRouter.js  # moduleKey-based route component (from ep-tool)
+        │   ├── useEffectAsync.js # Async effect hook (from ep-tool)
+        │   ├── InlineApp.js      # Player — reads .cast from macro body
+        │   └── AttachmentApp.js  # Player — fetches .cast from page attachment
+        └── package.json          # npm start → PORT=3000
 ```
 
 ---
@@ -67,11 +67,7 @@ npm install
 ### 2. Install frontend dependencies and build
 
 ```sh
-# Inline macro
-cd static/inline-macro && npm install && npm run build && cd ../..
-
-# Attachment macro
-cd static/attachment-macro && npm install && npm run build && cd ../..
+cd static/app && npm install && npm run build && cd ../..
 ```
 
 ### 3. Deploy the app
@@ -92,26 +88,20 @@ forge install --site <your-site>.atlassian.net --product confluence
 
 The app uses `forge tunnel` to proxy requests to local dev servers, giving you hot-reloading without needing to rebuild or redeploy on every change.
 
-You need **three terminals** running simultaneously:
+You need **two terminals** running simultaneously:
 
 **Terminal 1 — Forge tunnel** (proxies UI resources and handles backend functions locally):
 ```sh
 forge tunnel
 ```
 
-**Terminal 2 — Inline macro dev server** (hot-reloads on port 3000):
+**Terminal 2 — Shared app dev server** (hot-reloads on port 3000, serves both macros):
 ```sh
-cd static/inline-macro
+cd static/app
 npm start
 ```
 
-**Terminal 3 — Attachment macro dev server** (hot-reloads on port 3001):
-```sh
-cd static/attachment-macro
-npm start
-```
-
-Once all three are running, open a Confluence page with the macro inserted and refresh — changes to any `src/` file in either frontend will be reflected immediately. Backend function changes (`src/index.js`, `src/smartLink.js`) are also picked up automatically by `forge tunnel` without redeploying.
+Once both are running, open a Confluence page with either macro inserted and refresh — changes to any `src/` file in `static/app/` will be reflected immediately. Backend function changes (`src/index.js`, `src/smartLink.js`, `src/frontend/*.jsx`) are also picked up automatically by `forge tunnel` without redeploying.
 
 > **Note:** `forge tunnel` only serves your own browser session. Other users on the same site continue to see the last deployed version.
 
@@ -119,10 +109,9 @@ Once all three are running, open a Confluence page with the macro inserted and r
 
 | Resource | Manifest key | Dev server port |
 |---|---|---|
-| Inline macro | `main-inline` | 3000 |
-| Attachment macro | `main-attachment` | 3001 |
+| Shared app (both macros) | `main` | 3000 |
 
-These ports are configured in `manifest.yml` under each resource's `tunnel.port` field, and locked in via the `PORT=` prefix in each `package.json`'s `start` script.
+The port is configured in `manifest.yml` under the `main` resource's `tunnel.port` field, and set via `PORT=3000` in `static/app/package.json`'s `start` script.
 
 ---
 
