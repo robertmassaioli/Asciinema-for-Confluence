@@ -13,8 +13,22 @@ A Forge app that brings [asciinema](https://asciinema.org) terminal recordings i
 ## Requirements
 
 - [Forge CLI](https://developer.atlassian.com/platform/forge/set-up-forge/) installed and authenticated (`forge login`)
-- Node.js 22+
+- Node.js 24 (use `nvm` — a `.nvmrc` is provided)
 - npm
+
+## Node.js version
+
+This project uses Node.js 24, matching the `nodejs24.x` Forge runtime. If you use [nvm](https://github.com/nvm-sh/nvm), just run the following in the project root to switch to the correct version:
+
+```sh
+nvm use
+```
+
+If you don't have Node.js 24 installed yet:
+
+```sh
+nvm install
+```
 
 ## Project structure
 
