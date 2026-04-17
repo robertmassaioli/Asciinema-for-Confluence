@@ -77,13 +77,14 @@ export default function AttachmentApp() {
         }
 
         const attachmentId = attachment.id;
+        const downloadLink = attachment.downloadLink || attachment._links?.download;
         console.log('[asciinema-attachment] found attachment id:', attachmentId);
+        console.log('[asciinema-attachment] downloadLink:', downloadLink);
 
-        // Step 2: Download the raw .cast file content
+        // Step 2: Download the raw .cast file content using the downloadLink
+        // from the attachment list response (already a relative path)
         console.log('[asciinema-attachment] downloading attachment content...');
-        const downloadResp = await requestConfluence(
-          `/wiki/rest/api/content/${attachmentId}/download`
-        );
+        const downloadResp = await requestConfluence(`/wiki${downloadLink}`);
         if (!downloadResp.ok) {
           throw new Error(`Failed to download attachment: ${downloadResp.status} ${downloadResp.statusText}`);
         }
