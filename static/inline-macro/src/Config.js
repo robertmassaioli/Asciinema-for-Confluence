@@ -1,35 +1,18 @@
 /**
- * Inline Macro — Configuration Panel (UI Kit)
+ * Inline Macro — Configuration Panel (Custom UI)
  *
- * This component is rendered when a page author clicks the pencil icon on the
- * macro. It collects playback options that are stored in the macro's config
- * and read back in App.js via ctx.extension.config.
+ * This component is rendered when a page author opens the macro config.
+ * It uses @forge/bridge's view.submit() to save config values — this is
+ * the correct Custom UI approach for macro config panels. ForgeReconciler
+ * is NOT used here (that API is for UI Kit only).
  *
- * Only UI Kit components from @forge/react may be used here.
- * Standard HTML elements (<div>, <input>, etc.) will NOT render in the
- * Forge config panel context.
- *
- * Available playback options:
- *   - autoplay  : boolean — start playing immediately on page load
- *   - loop      : boolean — loop the recording
- *   - speed     : number  — playback speed multiplier (default 1)
- *   - theme     : string  — colour theme for the terminal
- *   - cols      : number  — override terminal width (optional)
- *   - rows      : number  — override terminal height (optional)
+ * view.submit(config) saves the config object which is later available
+ * in App.js via ctx.extension.config.
  */
 
-import React from 'react';
-import ForgeReconciler, {
-  Checkbox,
-  Label,
-  Select,
-  Textfield,
-  Stack,
-  Text,
-  useConfig,
-} from '@forge/react';
+import React, { useEffect, useState } from 'react';
+import { view } from '@forge/bridge';
 
-// Theme choices supported by the asciinema-player library
 const THEME_OPTIONS = [
   { label: 'asciinema (default)', value: 'asciinema' },
   { label: 'Monokai', value: 'monokai' },
@@ -38,72 +21,164 @@ const THEME_OPTIONS = [
   { label: 'Dracula', value: 'dracula' },
 ];
 
-function Config() {
-  // useConfig() returns the currently saved config values so we can
-  // pre-populate the form fields on re-open.
-  const config = useConfig() ?? {};
+const inputStyle = {
+  width: '100%',
+  padding: '6px 8px',
+  border: '2px solid #dfe1e6',
+  borderRadius: '3px',
+  fontSize: '14px',
+  boxSizing: 'border-box',
+};
+
+const labelStyle = {
+  display: 'block',
+  fontWeight: 600,
+  fontSize: '12px',
+  color: '#6b778c',
+  marginBottom: '4px',
+  marginTop: '12px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
+
+const descStyle = {
+  fontSize: '12px',
+  color: '#6b778c',
+  marginTop: '4px',
+};
+
+export default function Config() {
+  const [config, setConfig] = useState({
+    autoplay: false,
+    loop: false,
+    speed: '1',
+    theme: 'asciinema',
+    cols: '',
+    rows: '',
+  });
+
+  // Load existing config values when the panel opens
+  useEffect(() => {
+    view.getContext().then((ctx) => {
+      const saved = ctx.extension?.config ?? {};
+      setConfig((prev) => ({ ...prev, ...saved }));
+    });
+  }, []);
+
+  const handleChange = (field, value) => {
+    setConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // view.submit() saves the config and closes the panel
+    view.submit(config);
+  };
+
+  const handleCancel = () => {
+    view.close();
+  };
 
   return (
-    <Stack space="space.200">
-      <Text>
-        Paste your <strong>.cast</strong> file content into the macro body,
-        then configure playback options below.
-      </Text>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '16px', maxWidth: '480px' }}>
+      <p style={{ color: '#6b778c', fontSize: '14px', marginTop: 0 }}>
+        Paste your <strong>.cast</strong> file content into the macro body, then configure playback options below.
+      </p>
 
-      {/* ── Playback behaviour ── */}
-      <Label>Autoplay</Label>
-      <Checkbox
-        name="autoplay"
-        label="Start playing automatically when the page loads"
-        defaultChecked={config.autoplay === true || config.autoplay === 'true'}
-      />
+      <form onSubmit={handleSubmit}>
+        {/* ── Playback behaviour ── */}
+        <label style={labelStyle}>Playback</label>
 
-      <Label>Loop</Label>
-      <Checkbox
-        name="loop"
-        label="Loop the recording continuously"
-        defaultChecked={config.loop === true || config.loop === 'true'}
-      />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
+          <input
+            type="checkbox"
+            checked={config.autoplay === true || config.autoplay === 'true'}
+            onChange={(e) => handleChange('autoplay', e.target.checked)}
+          />
+          Autoplay — start playing immediately when the page loads
+        </label>
 
-      <Label>Speed</Label>
-      <Textfield
-        name="speed"
-        placeholder="1"
-        defaultValue={config.speed ?? '1'}
-        description="Playback speed multiplier. 1 = normal, 2 = double speed."
-      />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
+          <input
+            type="checkbox"
+            checked={config.loop === true || config.loop === 'true'}
+            onChange={(e) => handleChange('loop', e.target.checked)}
+          />
+          Loop — loop the recording continuously
+        </label>
 
-      {/* ── Visual options ── */}
-      <Label>Theme</Label>
-      <Select
-        name="theme"
-        options={THEME_OPTIONS}
-        defaultValue={
-          THEME_OPTIONS.find((t) => t.value === (config.theme ?? 'asciinema')) ?? THEME_OPTIONS[0]
-        }
-      />
+        <label style={labelStyle}>Speed</label>
+        <input
+          type="number"
+          min="0.1"
+          max="10"
+          step="0.1"
+          style={inputStyle}
+          value={config.speed ?? '1'}
+          onChange={(e) => handleChange('speed', e.target.value)}
+        />
+        <p style={descStyle}>Playback speed multiplier. 1 = normal, 2 = double speed.</p>
 
-      {/* ── Terminal size overrides ── */}
-      <Label>Terminal Width (columns)</Label>
-      <Textfield
-        name="cols"
-        placeholder="Auto (from cast header)"
-        defaultValue={config.cols ?? ''}
-        description="Leave blank to use the width declared in the .cast file."
-      />
+        {/* ── Visual options ── */}
+        <label style={labelStyle}>Theme</label>
+        <select
+          style={inputStyle}
+          value={config.theme ?? 'asciinema'}
+          onChange={(e) => handleChange('theme', e.target.value)}
+        >
+          {THEME_OPTIONS.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
 
-      <Label>Terminal Height (rows)</Label>
-      <Textfield
-        name="rows"
-        placeholder="Auto (from cast header)"
-        defaultValue={config.rows ?? ''}
-        description="Leave blank to use the height declared in the .cast file."
-      />
-    </Stack>
+        {/* ── Terminal size overrides ── */}
+        <label style={labelStyle}>Terminal Width (columns)</label>
+        <input
+          type="number"
+          min="1"
+          style={inputStyle}
+          placeholder="Auto (from cast header)"
+          value={config.cols ?? ''}
+          onChange={(e) => handleChange('cols', e.target.value)}
+        />
+        <p style={descStyle}>Leave blank to use the width declared in the .cast file.</p>
+
+        <label style={labelStyle}>Terminal Height (rows)</label>
+        <input
+          type="number"
+          min="1"
+          style={inputStyle}
+          placeholder="Auto (from cast header)"
+          value={config.rows ?? ''}
+          onChange={(e) => handleChange('rows', e.target.value)}
+        />
+        <p style={descStyle}>Leave blank to use the height declared in the .cast file.</p>
+
+        {/* ── Actions ── */}
+        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+          <button
+            type="submit"
+            style={{
+              background: '#0052cc', color: '#fff', border: 'none',
+              padding: '8px 16px', borderRadius: '3px', cursor: 'pointer',
+              fontSize: '14px', fontWeight: 600,
+            }}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            style={{
+              background: 'none', color: '#42526e', border: '2px solid #dfe1e6',
+              padding: '8px 16px', borderRadius: '3px', cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
-
-// Register the config component with Forge so it appears in the config panel
-ForgeReconciler.addConfig(<Config />);
-
-export default Config;

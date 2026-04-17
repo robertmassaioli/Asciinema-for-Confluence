@@ -2,7 +2,12 @@
  * Entry point for the attachment macro Custom UI.
  *
  * Renders either the player (App) or the config panel (Config) depending
- * on the Forge render context injected by the platform.
+ * on the Forge render context (__FORGE_RENDER_CONTEXT__):
+ *   - "macro"        → App    (the asciinema player, loads from attachment)
+ *   - "macro-config" → Config (recording options form, uses view.submit())
+ *
+ * Both views use standard ReactDOM.render(). Config uses view.submit()
+ * from @forge/bridge to save settings (NOT ForgeReconciler.addConfig()).
  */
 
 import React from 'react';

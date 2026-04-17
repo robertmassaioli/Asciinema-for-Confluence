@@ -1,10 +1,8 @@
 /**
- * Attachment Macro — Configuration Panel (UI Kit)
+ * Attachment Macro — Configuration Panel (Custom UI)
  *
- * Rendered when the author clicks the pencil icon on the macro.
- * Collects the attachment filename and playback options.
- *
- * Only @forge/react UI Kit components are permitted here.
+ * Uses @forge/bridge's view.submit() to save config — the correct
+ * Custom UI approach. ForgeReconciler is NOT used here.
  *
  * Config fields:
  *   - filename  : string  — name of the .cast file attached to this page (required)
@@ -15,17 +13,8 @@
  *   - poster    : number  — time (seconds) to use as poster/preview frame
  */
 
-import React from 'react';
-import ForgeReconciler, {
-  Checkbox,
-  Label,
-  Select,
-  Textfield,
-  Stack,
-  Text,
-  SectionMessage,
-  useConfig,
-} from '@forge/react';
+import React, { useEffect, useState } from 'react';
+import { view } from '@forge/bridge';
 
 const THEME_OPTIONS = [
   { label: 'asciinema (default)', value: 'asciinema' },
@@ -35,72 +24,173 @@ const THEME_OPTIONS = [
   { label: 'Dracula', value: 'dracula' },
 ];
 
-function Config() {
-  const config = useConfig() ?? {};
+const inputStyle = {
+  width: '100%',
+  padding: '6px 8px',
+  border: '2px solid #dfe1e6',
+  borderRadius: '3px',
+  fontSize: '14px',
+  boxSizing: 'border-box',
+};
+
+const labelStyle = {
+  display: 'block',
+  fontWeight: 600,
+  fontSize: '12px',
+  color: '#6b778c',
+  marginBottom: '4px',
+  marginTop: '12px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
+
+const descStyle = {
+  fontSize: '12px',
+  color: '#6b778c',
+  marginTop: '4px',
+};
+
+export default function Config() {
+  const [config, setConfig] = useState({
+    filename: '',
+    autoplay: false,
+    loop: false,
+    speed: '1',
+    theme: 'asciinema',
+    poster: '',
+  });
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    view.getContext().then((ctx) => {
+      const saved = ctx.extension?.config ?? {};
+      setConfig((prev) => ({ ...prev, ...saved }));
+    });
+  }, []);
+
+  const handleChange = (field, value) => {
+    setConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!config.filename?.trim()) {
+      setError('Attachment filename is required.');
+      return;
+    }
+    setError(null);
+    view.submit(config);
+  };
+
+  const handleCancel = () => {
+    view.close();
+  };
 
   return (
-    <Stack space="space.200">
-      <SectionMessage title="Attachment setup" appearance="info">
-        <Text>
-          Attach your <strong>.cast</strong> file to this Confluence page first,
-          then enter its exact filename below.
-        </Text>
-      </SectionMessage>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '16px', maxWidth: '480px' }}>
+      {/* Info banner */}
+      <div style={{ background: '#deebff', border: '1px solid #4c9aff', borderRadius: '3px', padding: '10px 14px', marginBottom: '16px', fontSize: '14px', color: '#0747a6' }}>
+        <strong>Setup:</strong> Attach your <code>.cast</code> file to this Confluence page first, then enter its filename below.
+      </div>
 
-      {/* ── Required: attachment filename ── */}
-      <Label>Attachment filename (required)</Label>
-      <Textfield
-        name="filename"
-        placeholder="demo.cast"
-        defaultValue={config.filename ?? ''}
-        description="The exact name of the .cast file attached to this page, including the extension."
-      />
+      <form onSubmit={handleSubmit}>
+        {/* ── Required: attachment filename ── */}
+        <label style={{ ...labelStyle, color: error ? '#de350b' : '#6b778c' }}>
+          Attachment filename (required)
+        </label>
+        <input
+          type="text"
+          style={{ ...inputStyle, borderColor: error ? '#de350b' : '#dfe1e6' }}
+          placeholder="demo.cast"
+          value={config.filename ?? ''}
+          onChange={(e) => { handleChange('filename', e.target.value); setError(null); }}
+        />
+        {error && <p style={{ color: '#de350b', fontSize: '12px', marginTop: '4px' }}>{error}</p>}
+        <p style={descStyle}>The exact filename of the .cast attachment on this page, including the .cast extension.</p>
 
-      {/* ── Playback behaviour ── */}
-      <Label>Autoplay</Label>
-      <Checkbox
-        name="autoplay"
-        label="Start playing automatically when the page loads"
-        defaultChecked={config.autoplay === true || config.autoplay === 'true'}
-      />
+        {/* ── Playback behaviour ── */}
+        <label style={labelStyle}>Playback</label>
 
-      <Label>Loop</Label>
-      <Checkbox
-        name="loop"
-        label="Loop the recording continuously"
-        defaultChecked={config.loop === true || config.loop === 'true'}
-      />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
+          <input
+            type="checkbox"
+            checked={config.autoplay === true || config.autoplay === 'true'}
+            onChange={(e) => handleChange('autoplay', e.target.checked)}
+          />
+          Autoplay — start playing immediately when the page loads
+        </label>
 
-      <Label>Speed</Label>
-      <Textfield
-        name="speed"
-        placeholder="1"
-        defaultValue={config.speed ?? '1'}
-        description="Playback speed multiplier. 1 = normal, 2 = double speed."
-      />
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
+          <input
+            type="checkbox"
+            checked={config.loop === true || config.loop === 'true'}
+            onChange={(e) => handleChange('loop', e.target.checked)}
+          />
+          Loop — loop the recording continuously
+        </label>
 
-      {/* ── Visual options ── */}
-      <Label>Theme</Label>
-      <Select
-        name="theme"
-        options={THEME_OPTIONS}
-        defaultValue={
-          THEME_OPTIONS.find((t) => t.value === (config.theme ?? 'asciinema')) ?? THEME_OPTIONS[0]
-        }
-      />
+        <label style={labelStyle}>Speed</label>
+        <input
+          type="number"
+          min="0.1"
+          max="10"
+          step="0.1"
+          style={inputStyle}
+          value={config.speed ?? '1'}
+          onChange={(e) => handleChange('speed', e.target.value)}
+        />
+        <p style={descStyle}>Playback speed multiplier. 1 = normal, 2 = double speed.</p>
 
-      {/* ── Poster frame ── */}
-      <Label>Poster frame (seconds)</Label>
-      <Textfield
-        name="poster"
-        placeholder="Leave blank for default"
-        defaultValue={config.poster ?? ''}
-        description="Time position (in seconds) to use as the preview image before playback starts."
-      />
-    </Stack>
+        {/* ── Visual options ── */}
+        <label style={labelStyle}>Theme</label>
+        <select
+          style={inputStyle}
+          value={config.theme ?? 'asciinema'}
+          onChange={(e) => handleChange('theme', e.target.value)}
+        >
+          {THEME_OPTIONS.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+
+        {/* ── Poster frame ── */}
+        <label style={labelStyle}>Poster frame (seconds)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          style={inputStyle}
+          placeholder="Leave blank for default"
+          value={config.poster ?? ''}
+          onChange={(e) => handleChange('poster', e.target.value)}
+        />
+        <p style={descStyle}>Time position (in seconds) to use as the preview image before playback starts.</p>
+
+        {/* ── Actions ── */}
+        <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+          <button
+            type="submit"
+            style={{
+              background: '#0052cc', color: '#fff', border: 'none',
+              padding: '8px 16px', borderRadius: '3px', cursor: 'pointer',
+              fontSize: '14px', fontWeight: 600,
+            }}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            style={{
+              background: 'none', color: '#42526e', border: '2px solid #dfe1e6',
+              padding: '8px 16px', borderRadius: '3px', cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
-
-ForgeReconciler.addConfig(<Config />);
-
-export default Config;
