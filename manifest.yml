@@ -64,9 +64,6 @@ resources:
   # Attachment macro: Custom UI React app (serves both main view and config panel)
   - key: main-attachment
     path: static/attachment-macro/build
-  # Shared asciinema-player JS/CSS assets (referenced by both frontends)
-  - key: player-assets
-    path: static/player-assets
 
 app:
   runtime:
@@ -81,6 +78,4 @@ permissions:
   external:
     fetch:
       backend:
-        - address: https://asciinema.org
-      client:
         - address: https://asciinema.org

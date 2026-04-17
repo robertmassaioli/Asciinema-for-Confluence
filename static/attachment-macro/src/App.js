@@ -5,55 +5,14 @@
  * backend resolver to get a download URL for the .cast file, then initialises
  * the asciinema-player pointing at that URL.
  *
- * Flow:
- *   1. view.getContext() → contentId (page ID) + config (filename + options)
- *   2. invoke('resolveAttachmentUrl') → downloadUrl
- *   3. Load player CSS + JS from Forge static assets CDN
- *   4. AsciinemaPlayer.create(downloadUrl, container, opts)
+ * The asciinema-player npm package is imported directly — no need to load
+ * JS/CSS from static assets at runtime.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { view, invoke, assets } from '@forge/bridge';
-
-/**
- * Resolves a static asset URL from the Forge CDN.
- */
-async function resolveAssetUrl(filename) {
-  try {
-    return await assets.getUrl(filename);
-  } catch {
-    return filename;
-  }
-}
-
-/**
- * Injects the asciinema-player CSS into the document head (once only).
- */
-function injectPlayerCss(cssUrl) {
-  if (document.querySelector('link[data-asciinema-css]')) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = cssUrl;
-  link.setAttribute('data-asciinema-css', '1');
-  document.head.appendChild(link);
-}
-
-/**
- * Loads the asciinema-player JS bundle and resolves when ready.
- */
-function loadPlayerScript(jsUrl) {
-  return new Promise((resolve, reject) => {
-    if (window.AsciinemaPlayer) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = jsUrl;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error(`Failed to load player script: ${jsUrl}`));
-    document.head.appendChild(script);
-  });
-}
+import { view, invoke } from '@forge/bridge';
+import * as AsciinemaPlayer from 'asciinema-player';
+import 'asciinema-player/dist/bundle/asciinema-player.css';
 
 export default function App() {
   const containerRef = useRef(null);
@@ -61,13 +20,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    let player = null;
 
     async function initPlayer() {
       try {
-        // Step 1: Get the Forge context.
-        // contentId is the Confluence page ID. config holds what the author
-        // set in the config panel (filename, playback options, etc.)
+        // contentId is the Confluence page ID.
+        // config holds what the author set in the config panel.
         const ctx = await view.getContext();
         const pageId = ctx.contentId;
         const config = ctx.extension?.config ?? {};
@@ -88,34 +46,15 @@ export default function App() {
           return;
         }
 
-        if (cancelled) return;
-
-        // Step 2: Ask the backend resolver to look up the attachment download URL.
-        // This runs server-side with the user's Confluence permissions.
+        // Ask the backend resolver to look up the attachment download URL.
         const { downloadUrl } = await invoke('resolveAttachmentUrl', { pageId, filename });
 
-        if (cancelled) return;
-
-        // Step 3: Resolve Forge CDN URLs for the player assets
-        const [cssUrl, jsUrl] = await Promise.all([
-          resolveAssetUrl('asciinema-player.css'),
-          resolveAssetUrl('asciinema-player.min.js'),
-        ]);
-
-        if (cancelled) return;
-
-        // Step 4: Inject CSS and load the JS bundle
-        injectPlayerCss(cssUrl);
-        await loadPlayerScript(jsUrl);
-
-        if (cancelled || !containerRef.current) return;
+        if (!containerRef.current) return;
 
         setLoading(false);
 
-        // Step 5: Create the player, pointing at the Confluence attachment URL.
-        // The player fetches the .cast file directly from Confluence — no
-        // server-side streaming or proxying needed.
-        window.AsciinemaPlayer.create(
+        // Create the player pointing at the Confluence attachment URL.
+        player = AsciinemaPlayer.create(
           downloadUrl,
           containerRef.current,
           {
@@ -123,23 +62,24 @@ export default function App() {
             loop: config.loop === true || config.loop === 'true',
             speed: config.speed ? parseFloat(config.speed) : 1,
             theme: config.theme || 'asciinema',
-            // Show a poster frame at this number of seconds before the user plays
             poster: config.poster ? `npt:${config.poster}` : undefined,
             fit: 'width',
           }
         );
       } catch (err) {
-        if (!cancelled) {
-          console.error('Asciinema attachment player error:', err);
-          setError(`Failed to load recording: ${err.message}`);
-          setLoading(false);
-        }
+        console.error('Asciinema attachment player error:', err);
+        setError(`Failed to load recording: ${err.message}`);
+        setLoading(false);
       }
     }
 
     initPlayer();
 
-    return () => { cancelled = true; };
+    return () => {
+      if (player && typeof player.dispose === 'function') {
+        player.dispose();
+      }
+    };
   }, []);
 
   if (error) {
@@ -158,10 +98,5 @@ export default function App() {
     );
   }
 
-  return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', minHeight: '200px' }}
-    />
-  );
+  return <div ref={containerRef} style={{ width: '100%' }} />;
 }
