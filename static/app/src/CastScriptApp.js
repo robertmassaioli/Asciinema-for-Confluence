@@ -15,7 +15,7 @@
  *           → data: URL → AsciinemaPlayer.create()
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { view } from '@forge/bridge';
 import { parse, compile, encodeV3, NULL_RESOLVER } from '@cast-builder/core';
 import * as AsciinemaPlayer from 'asciinema-player';
@@ -58,10 +58,11 @@ function extractCodeBlockText(body) {
 }
 
 export default function CastScriptApp() {
-  const containerRef = useRef(null);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('loading'); // 'loading' | 'compiling' | 'ready'
   const [castData, setCastData] = useState(null); // { castText, playerOpts }
+  const castDataRef = useRef(null); // mirror of castData for use in callback ref
+  const playerRef = useRef(null);
 
   // Phase 1: fetch context, parse, compile — runs once on mount
   useEffect(() => {
@@ -113,9 +114,10 @@ export default function CastScriptApp() {
           fit: 'width',
         };
 
-        // Store cast data in state — this triggers a re-render which mounts
-        // the container div, then Phase 2 creates the player.
-        setCastData({ castText, playerOpts });
+        // Store cast data in both state (triggers re-render) and ref (for callback ref).
+        const data = { castText, playerOpts };
+        castDataRef.current = data;
+        setCastData(data);
         setStatus('ready');
       } catch (err) {
         console.error('[asciinema-castscript] error:', err);
@@ -127,21 +129,30 @@ export default function CastScriptApp() {
     compile_();
   }, []);
 
-  // Phase 2: create player once castData is set AND container div is in the DOM
-  useEffect(() => {
-    if (!castData || !containerRef.current) return;
-
-    console.log('[asciinema-castscript] creating player with opts:', castData.playerOpts);
-    const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castData.castText)}`;
-    const player = AsciinemaPlayer.create(dataUrl, containerRef.current, castData.playerOpts);
-    console.log('[asciinema-castscript] player created successfully');
-
-    return () => {
-      if (player && typeof player.dispose === 'function') {
-        player.dispose();
+  // Callback ref — called by React when the container div is mounted/unmounted.
+  // This fires AFTER the DOM node is attached, so containerRef.current is always valid.
+  const containerCallbackRef = useCallback((node) => {
+    console.log('[asciinema-castscript] containerCallbackRef called — node:', node, 'castDataRef.current:', !!castDataRef.current);
+    if (node === null) {
+      // Unmounted — dispose player
+      if (playerRef.current && typeof playerRef.current.dispose === 'function') {
+        playerRef.current.dispose();
+        playerRef.current = null;
       }
-    };
-  }, [castData]);
+      return;
+    }
+    // Mounted — create player if cast data is ready
+    if (!castDataRef.current) {
+      console.log('[asciinema-castscript] container mounted but castData not ready yet');
+      return;
+    }
+    console.log('[asciinema-castscript] creating player with opts:', castDataRef.current.playerOpts);
+    const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castDataRef.current.castText)}`;
+    playerRef.current = AsciinemaPlayer.create(dataUrl, node, castDataRef.current.playerOpts);
+    console.log('[asciinema-castscript] player created successfully');
+  }, []); // stable — no deps needed since we read from refs
+
+  console.log('[asciinema-castscript] render — status:', status, 'castData:', !!castData, 'error:', error);
 
   if (error) {
     return (
@@ -167,5 +178,5 @@ export default function CastScriptApp() {
     );
   }
 
-  return <div ref={containerRef} style={{ width: '100%' }} />;
+  return <div ref={containerCallbackRef} style={{ width: '100%' }} />;
 }
