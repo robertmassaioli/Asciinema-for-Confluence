@@ -9,7 +9,7 @@ modules:
       resource: main
       resolver:
         function: resolver
-      bodyType: plain-text
+      layout: bodied
       categories:
         - media
       parameters:
