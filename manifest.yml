@@ -14,7 +14,6 @@ modules:
         - media
       config:
         resource: main-inline
-        render: native
         title: Playback Options
         openOnInsert: true
 
@@ -31,7 +30,6 @@ modules:
         - media
       config:
         resource: main-attachment
-        render: native
         title: Recording Options
         openOnInsert: true
 
