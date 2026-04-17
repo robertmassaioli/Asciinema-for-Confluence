@@ -168,21 +168,28 @@ configuration changes.
 4. Save the page — the player renders immediately, no upload required
 5. To update the animation: edit the page, change the script, save
 
-### Config panel (`CastScriptConfig.js` — UI Kit component)
+### Config panel (`CastScriptConfig.js`)
 
-The config panel is a UI Kit component registered via the `ContextRoute config` prop
-(same pattern as `InlineConfig.js` and `AttachmentConfig.js`). It uses
-`ForgeReconciler.addConfig()` under the hood and `useConfig()` to read back saved values.
+The config panel follows the same pattern as `InlineConfig.js` and `AttachmentConfig.js`:
 
-Fields:
-- **Playback** — `CheckboxGroup` with options `autoplay` and `loop` (stored as
-  `config.playback: string[]`, e.g. `['autoplay', 'loop']`)
+- `CastScriptConfig.js` is passed as the `config` prop on the matching `ContextRoute` in
+  `index.js`: `<ContextRoute moduleKey='asciinema-castscript' config={<CastScriptConfig />}>`
+- `ContextRoute` calls `ForgeReconciler.addConfig(<CastScriptConfig />)` once on first render
+- `CastScriptConfig.js` uses `@forge/react` components (`CheckboxGroup`, `Select`,
+  `Textfield`, `Label`) and `useConfig()` to populate default values — this is the
+  ForgeReconciler (UI Kit) world
+- `CastScriptApp.js` reads the saved config via `ctx.extension.config` from
+  `view.getContext()` — this is the ReactDOM (Custom UI) world. `useConfig()` must NOT
+  be called here (two React instances — see the `useConfig()` / ReactDOM boundary rule)
+
+Fields in `CastScriptConfig.js`:
+- **Playback** — `CheckboxGroup` (name: `playback`) with values `autoplay` and `loop`;
+  read back in app as `Array.isArray(config.playback) && config.playback.includes('autoplay')`
 - **Speed** — `Textfield` (name: `speed`, default `"1"`)
-- **Theme** — `Select` with options: asciinema / monokai / solarized-dark / solarized-light / dracula
-- **Typing seed** — `Textfield` (name: `seed`, placeholder `"Leave blank for random"`)
+- **Theme** — `Select` (name: `theme`) with options: asciinema / monokai / solarized-dark /
+  solarized-light / dracula
+- **Typing seed** — `Textfield` (name: `seed`, placeholder `"Leave blank for random timing"`)
 
-Config values are read in `CastScriptApp.js` via `ctx.extension.config` (not `useConfig()`,
-since the app component is rendered by `ReactDOM`, not `ForgeReconciler`).
 
 ---
 
