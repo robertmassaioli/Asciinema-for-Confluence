@@ -16,7 +16,7 @@ modules:
         resource: config-inline
         render: native
         title: Playback Options
-        openOnInsert: true
+        openOnInsert: false
 
     # Module 2: Standard macro — point at a .cast file attached to the page
     - key: asciinema-attachment
