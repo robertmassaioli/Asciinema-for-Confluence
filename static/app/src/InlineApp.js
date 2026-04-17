@@ -1,11 +1,8 @@
 /**
- * Inline Macro — Main Player Component
+ * Inline Macro — Player Component
  *
  * Reads the raw .cast file content from the macro body (via Forge context),
  * then initialises the asciinema-player with the configured playback options.
- *
- * The asciinema-player npm package is imported directly — no need to load
- * JS/CSS from static assets at runtime.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -13,7 +10,7 @@ import { view } from '@forge/bridge';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
-export default function App() {
+export default function InlineApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
 
@@ -22,8 +19,6 @@ export default function App() {
 
     async function initPlayer() {
       try {
-        // Get the Forge context — body holds the raw .cast content,
-        // extension.config holds playback options set in the config panel.
         const ctx = await view.getContext();
         const castText = ctx.extension?.body ?? '';
         const config = ctx.extension?.config ?? {};
@@ -35,8 +30,6 @@ export default function App() {
 
         if (!containerRef.current) return;
 
-        // { data: castText } tells the player to parse the string directly
-        // rather than fetching a URL — ideal for the inline body approach.
         player = AsciinemaPlayer.create(
           { data: castText },
           containerRef.current,

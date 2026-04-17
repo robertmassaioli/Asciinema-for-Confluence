@@ -1,12 +1,9 @@
 /**
- * Attachment Macro — Main Player Component
+ * Attachment Macro — Player Component
  *
  * Reads the attachment filename and page ID from the Forge context, calls the
  * backend resolver to get a download URL for the .cast file, then initialises
  * the asciinema-player pointing at that URL.
- *
- * The asciinema-player npm package is imported directly — no need to load
- * JS/CSS from static assets at runtime.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -14,7 +11,7 @@ import { view, invoke } from '@forge/bridge';
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 
-export default function App() {
+export default function AttachmentApp() {
   const containerRef = useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,8 +21,6 @@ export default function App() {
 
     async function initPlayer() {
       try {
-        // contentId is the Confluence page ID.
-        // config holds what the author set in the config panel.
         const ctx = await view.getContext();
         const pageId = ctx.contentId;
         const config = ctx.extension?.config ?? {};
@@ -46,14 +41,12 @@ export default function App() {
           return;
         }
 
-        // Ask the backend resolver to look up the attachment download URL.
         const { downloadUrl } = await invoke('resolveAttachmentUrl', { pageId, filename });
 
         if (!containerRef.current) return;
 
         setLoading(false);
 
-        // Create the player pointing at the Confluence attachment URL.
         player = AsciinemaPlayer.create(
           downloadUrl,
           containerRef.current,
