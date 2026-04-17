@@ -1,0 +1,20 @@
+modules:
+  macro:
+    - key: asciinema-for-confluence-hello-world
+      resource: main
+      resolver:
+        function: resolver
+      title: Asciinema for Confluence
+      description: Inserts Hello world!
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/hello-world/build
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/2f0f0616-8ca2-46b4-93a9-cc160618faf5
