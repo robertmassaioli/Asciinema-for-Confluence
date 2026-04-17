@@ -1,20 +1,96 @@
 modules:
   macro:
-    - key: asciinema-for-confluence-hello-world
-      resource: main
+    # Module 1: Bodied macro — paste raw .cast content directly into the body
+    - key: asciinema-inline
+      title: Asciinema Inline
+      description: >
+        Render an asciinema terminal recording by pasting the .cast file
+        contents directly into the macro body.
+      resource: main-inline
       resolver:
         function: resolver
-      title: Asciinema for Confluence
-      description: Inserts Hello world!
+      bodyType: plain-text
+      categories:
+        - media
+      config:
+        resource: config-inline
+        render: native
+        title: Playback Options
+        openOnInsert: true
+
+    # Module 2: Standard macro — point at a .cast file attached to the page
+    - key: asciinema-attachment
+      title: Asciinema Recording
+      description: >
+        Render an asciinema terminal recording from a .cast file attached
+        to this Confluence page.
+      resource: main-attachment
+      resolver:
+        function: resolver
+      categories:
+        - media
+      config:
+        resource: config-attachment
+        render: native
+        title: Recording Options
+        openOnInsert: true
+
+  # Module 3: Smart Link — enrich asciinema.org URLs with a rich preview card
+  graph:smartLink:
+    - key: asciinema-org-smart-link
+      name: Asciinema.org Smart Link
+      # Icon displayed on the Smart Link card to identify the source platform
+      icon: https://asciinema.org/favicon.ico
+      function: smart-link-resolver
+      domains:
+        - asciinema.org
+      subdomains: false
+      # Regex pattern matching asciinema.org recording URLs
+      patterns:
+        - 'https:\/\/asciinema\.org\/a\/([0-9a-zA-Z]+)(\?.*)?$'
+
   function:
+    # Single resolver handles both macro modules (attachment URL lookup)
     - key: resolver
-      handler: index.handler
+      handler: src/index.handler
+    # Dedicated function for Smart Link resolution
+    - key: smart-link-resolver
+      handler: src/smartLink.handler
+
 resources:
-  - key: main
-    path: static/hello-world/build
+  # Inline macro: main player view (Custom UI — React app)
+  - key: main-inline
+    path: static/inline-macro/build
+  # Inline macro: playback options config panel (UI Kit)
+  - key: config-inline
+    path: static/inline-macro/build
+  # Attachment macro: main player view (Custom UI — React app)
+  - key: main-attachment
+    path: static/attachment-macro/build
+  # Attachment macro: recording options config panel (UI Kit)
+  - key: config-attachment
+    path: static/attachment-macro/build
+  # Shared asciinema-player JS/CSS assets (referenced by both frontends)
+  - key: player-assets
+    path: static/player-assets
+
 app:
   runtime:
     name: nodejs24.x
     memoryMB: 256
     architecture: arm64
   id: ari:cloud:ecosystem::app/2f0f0616-8ca2-46b4-93a9-cc160618faf5
+
+permissions:
+  scopes:
+    # Needed to look up attachment download URLs via the Confluence REST API
+    - read:confluence-content.all
+  external:
+    fetch:
+      backend:
+        # Smart Link resolver fetches metadata from asciinema.org
+        - 'https://asciinema.org'
+      client:
+        # Frontend iframes load the .cast file directly from the Confluence
+        # attachment download URL (same origin, but listed for CSP clarity)
+        - 'https://asciinema.org'
