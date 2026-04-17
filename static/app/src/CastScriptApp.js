@@ -147,8 +147,17 @@ export default function CastScriptApp() {
       return;
     }
     console.log('[asciinema-castscript] creating player with opts:', castDataRef.current.playerOpts);
-    const dataUrl = `data:text/plain;charset=utf-8,${encodeURIComponent(castDataRef.current.castText)}`;
-    playerRef.current = AsciinemaPlayer.create(dataUrl, node, castDataRef.current.playerOpts);
+    // Pass cast content as a parsed object to avoid any fetch() call.
+    // AsciinemaPlayer.create() accepts { data: string } as first argument
+    // which bypasses the URL fetch path entirely — no CSP issues.
+    const castLines = castDataRef.current.castText.split('\n').filter(Boolean);
+    const header = JSON.parse(castLines[0]);
+    const events = castLines.slice(1).map(line => JSON.parse(line));
+    playerRef.current = AsciinemaPlayer.create(
+      { data: [header, ...events] },
+      node,
+      castDataRef.current.playerOpts
+    );
     console.log('[asciinema-castscript] player created successfully');
   }, []); // stable — no deps needed since we read from refs
 
