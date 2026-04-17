@@ -24,7 +24,7 @@ export default function AttachmentApp() {
         const ctx = await view.getContext();
         console.log('[asciinema-attachment] full context:', JSON.stringify(ctx, null, 2));
 
-        const pageId = ctx.contentId;
+        const pageId = ctx.extension?.content?.id;
         // Config is read from context — cannot use useConfig() here as it belongs
         // to @forge/react's React instance, not our ReactDOM instance.
         const config = ctx.extension?.config ?? {};
