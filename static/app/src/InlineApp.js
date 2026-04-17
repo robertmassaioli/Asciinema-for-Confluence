@@ -21,6 +21,7 @@ export default function InlineApp() {
       try {
         const ctx = await view.getContext();
         const castText = ctx.extension?.body ?? '';
+        // Classic macro config stores values in extension.config for parameters
         const config = ctx.extension?.config ?? {};
 
         if (!castText.trim()) {
