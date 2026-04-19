@@ -77,14 +77,24 @@ export default function AttachmentApp() {
         }
 
         const attachmentId = attachment.id;
-        const downloadLink = attachment.downloadLink || attachment._links?.download;
         console.log('[asciinema-attachment] found attachment id:', attachmentId);
-        console.log('[asciinema-attachment] downloadLink:', downloadLink);
 
-        // Step 2: Download the raw .cast file content using the downloadLink
-        // from the attachment list response (already a relative path)
+        // Step 2: Download the raw .cast file content using the officially-supported
+        // Confluence REST v1 attachment download endpoint.
+        //
+        // We previously used _links.download from the attachment list response, but
+        // that path came from a deprecated private API that Confluence withdrew for
+        // security reasons and which can return non-working URLs.
+        //
+        // The supported replacement (recommended by a Confluence engineer) is:
+        //   GET /wiki/rest/api/content/{pageId}/child/attachment/{attachmentId}/download
+        //
+        // Both pageId and attachmentId are already available from earlier in this
+        // function, so no extra API call is needed.
         console.log('[asciinema-attachment] downloading attachment content...');
-        const downloadResp = await requestConfluence(`/wiki${downloadLink}`);
+        const downloadResp = await requestConfluence(
+          `/wiki/rest/api/content/${pageId}/child/attachment/${attachmentId}/download`
+        );
         if (!downloadResp.ok) {
           throw new Error(`Failed to download attachment: ${downloadResp.status} ${downloadResp.statusText}`);
         }

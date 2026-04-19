@@ -54,11 +54,18 @@ resolver.define('resolveAttachmentUrl', async (req) => {
   }
 
   const attachment = data.results[0];
-  // _links.download is a relative path like /wiki/download/attachments/...
-  // We construct the full URL by prepending the Confluence base URL.
-  const baseUrl = attachment._links.base || '';
-  const downloadPath = attachment._links.download;
-  const downloadUrl = `${baseUrl}${downloadPath}`;
+  const attachmentId = attachment.id;
+
+  // Construct the download URL using the officially-supported Confluence REST v1
+  // attachment download endpoint, as recommended by a Confluence engineer.
+  //
+  // The deprecated _links.download path (e.g. /wiki/download/attachments/...)
+  // came from a private API that was withdrawn for security reasons and can
+  // return non-working URLs on Confluence Cloud.
+  //
+  // The supported replacement is:
+  //   GET /wiki/rest/api/content/{pageId}/child/attachment/{attachmentId}/download
+  const downloadUrl = `/wiki/rest/api/content/${pageId}/child/attachment/${attachmentId}/download`;
 
   return { downloadUrl };
 });
