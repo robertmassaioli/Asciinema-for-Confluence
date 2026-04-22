@@ -1,0 +1,86 @@
+title: Asciinema for Confluence
+description: >-
+  Embed live terminal recordings in Confluence — write a script, get an
+  interactive demo. No screen recording required.
+
+# Just the Docs theme — natively supported by GitHub Pages
+remote_theme: just-the-docs/just-the-docs
+
+# Update these with your GitHub username and app Marketplace ID once live
+url: "https://rmassaioli.github.io"
+baseurl: "/Asciinema-for-Confluence"
+
+# Sidebar navigation order uses the 'nav_order' front matter key
+nav_sort: order
+
+# Enable full-text search (client-side, no server needed)
+search_enabled: true
+search:
+  heading_level: 2
+  previews: 3
+  preview_words_before: 5
+  preview_words_after: 10
+  tokenizer_separator: /[\s/]+/
+
+# Dark colour scheme — matches the terminal/developer aesthetic
+color_scheme: dark
+
+# Footer
+footer_content: >-
+  &copy; 2026 Robert Massaioli.
+  Available on the
+  <a href="https://marketplace.atlassian.com">Atlassian Marketplace</a>.
+  &nbsp;|&nbsp;
+  <a href="/Asciinema-for-Confluence/privacy">Privacy Policy</a>
+
+# "Edit this page" links on every page
+gh_edit_link: true
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/rmassaioli/Asciinema-for-Confluence"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "edit"
+
+# Aux links in the top-right nav bar
+aux_links:
+  "Atlassian Marketplace":
+    - "https://marketplace.atlassian.com"
+  "GitHub":
+    - "https://github.com/rmassaioli/Asciinema-for-Confluence"
+
+aux_links_new_tab: true
+
+# Back to top link on every page
+back_to_top: true
+back_to_top_text: "Back to top"
+
+# Callout/label colours used in pages
+callouts_level: quiet
+callouts:
+  highlight:
+    color: yellow
+  important:
+    title: Important
+    color: blue
+  new:
+    title: New
+    color: green
+  note:
+    title: Note
+    color: purple
+  warning:
+    title: Warning
+    color: red
+
+# Kramdown markdown settings
+kramdown:
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+# Exclude non-site files from the Jekyll build
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - "*.gemspec"
+  - vendor/

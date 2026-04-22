@@ -1,0 +1,55 @@
+name: Deploy docs to GitHub Pages
+
+# Rebuild and deploy only when files under docs/ change on the main branch.
+# This avoids unnecessary builds when only Forge app code changes.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - docs/**
+
+  # Allow manual triggering from the Actions tab
+  workflow_dispatch:
+
+# Grant the workflow permission to write to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time; cancel any in-progress run if a new
+# push arrives before the previous deployment finishes.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build Jekyll site from docs/
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+        id: deployment
