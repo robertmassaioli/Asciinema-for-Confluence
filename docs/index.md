@@ -4,7 +4,6 @@ nav_order: 1
 description: >-
   Asciinema for Confluence brings interactive terminal recordings to your
   Confluence pages — write a script, get a live demo.
-permalink: /
 ---
 
 # Asciinema for Confluence
