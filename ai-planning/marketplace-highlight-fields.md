@@ -159,59 +159,11 @@ macro with raw cast content in the body (right).
 ---
 ---
 
-## Highlight 3 — Smart Links & Playback Configuration
+## Highlight 3 — Playback Configuration
 
 ---
 
 ### Option A
-
-**Highlight title** *(50 chars max)*
-```
-Smart Links and rich playback controls
-```
-*(38 chars)*
-
-**Highlight description** *(220 chars max)*
-```
-Paste any asciinema.org URL and get a rich preview card automatically. All macros support
-autoplay, loop, speed, poster frames, and five player themes — configurable without touching code.
-```
-*(193 chars)*
-
-**Image caption** *(220 chars max)*
-```
-An asciinema.org URL rendered as a rich Smart Link card in Confluence, and the macro
-configuration panel showing theme, speed, autoplay, and poster frame options.
-```
-*(163 chars)*
-
----
-
-### Option B
-
-**Highlight title** *(50 chars max)*
-```
-Instant previews for asciinema.org links
-```
-*(40 chars)*
-
-**Highlight description** *(220 chars max)*
-```
-Drop any asciinema.org recording URL into a Confluence page for an automatic rich preview card.
-Every macro also ships with theme, speed, autoplay, loop, and poster frame controls.
-```
-*(182 chars)*
-
-**Image caption** *(220 chars max)*
-```
-A rich Smart Link preview card for an asciinema.org recording (left) and the playback settings
-panel open in the Confluence macro editor (right).
-```
-*(144 chars)*
-
----
-
-### Option C
 
 **Highlight title** *(50 chars max)*
 ```
@@ -221,14 +173,62 @@ Configure every player without code
 
 **Highlight description** *(220 chars max)*
 ```
-Choose from five themes, set playback speed, enable autoplay or loop, and define a poster frame
-— all from the macro configuration panel. Plus automatic Smart Link cards for asciinema.org URLs.
+Choose from five themes, set playback speed, enable autoplay or loop, and define a poster
+frame — all from the macro configuration panel. No code, no CSS, no custom templates.
 ```
-*(195 chars)*
+*(181 chars)*
 
 **Image caption** *(220 chars max)*
 ```
-The macro configuration panel with theme, speed, autoplay, loop, and poster options visible,
-alongside a Smart Link preview card for an asciinema.org recording.
+The macro configuration panel showing theme, speed, autoplay, loop, and poster frame options,
+and the resulting player rendered on the published Confluence page.
 ```
-*(159 chars)*
+*(160 chars)*
+
+---
+
+### Option B
+
+**Highlight title** *(50 chars max)*
+```
+Five themes, speed control, autoplay and more
+```
+*(45 chars)*
+
+**Highlight description** *(220 chars max)*
+```
+Every macro ships with a full set of playback controls: choose a player theme, adjust speed,
+enable autoplay or loop, and set a poster frame — all from a simple configuration panel.
+```
+*(185 chars)*
+
+**Image caption** *(220 chars max)*
+```
+The playback configuration panel open in the Confluence editor, with theme, speed, autoplay,
+loop, and poster frame fields, alongside the rendered player on the published page.
+```
+*(177 chars)*
+
+---
+
+### Option C
+
+**Highlight title** *(50 chars max)*
+```
+Rich playback controls for every recording
+```
+*(42 chars)*
+
+**Highlight description** *(220 chars max)*
+```
+Tune each recording independently — pick from asciinema, monokai, solarized, or tango themes,
+set a custom playback speed, loop continuously, or show a specific poster frame before play.
+```
+*(189 chars)*
+
+**Image caption** *(220 chars max)*
+```
+The Confluence macro configuration panel for the CastScript macro, showing all available
+playback options including theme selector, speed, autoplay, loop, and poster frame.
+```
+*(172 chars)*
