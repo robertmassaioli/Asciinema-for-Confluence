@@ -108,7 +108,6 @@ Marketplace.
 For privacy-related questions or to exercise any data rights, contact:
 
 **Robert Massaioli**  
-Email: [your-email@example.com](mailto:your-email@example.com)  
 GitHub: [github.com/rmassaioli](https://github.com/rmassaioli)
 
 As the app stores no personal data externally, requests for data access, correction,
